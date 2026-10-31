@@ -10,14 +10,19 @@ namespace ARProductViewer.AR
 {
     /// <summary>
     /// Raycasts from the screen centre onto detected planes, previews the product there with a ghost,
-    /// and places an anchored product on tap. Placement decisions are made by <see cref="PlacementService"/>;
+    /// and places an anchored product on tap. Only floor-level planes are accepted. Placement and floor
+    /// decisions are made by <see cref="PlacementService"/> and <see cref="FloorEstimator"/>;
     /// this component only converts AR data to Core data and back.
     /// </summary>
-    [RequireComponent(typeof(ARRaycastManager), typeof(ARAnchorManager))]
+    [RequireComponent(typeof(ARRaycastManager), typeof(ARAnchorManager), typeof(ARPlaneManager))]
     public sealed class ARTapToPlace : MonoBehaviour
     {
         static readonly List<ARRaycastHit> s_Hits = new List<ARRaycastHit>();
         static readonly List<RaycastResult> s_UIHits = new List<RaycastResult>();
+
+        readonly List<SurfaceHit> m_SurfaceHits = new List<SurfaceHit>();
+        readonly List<ARPlane> m_HitPlanes = new List<ARPlane>();
+        readonly List<HorizontalPlane> m_FloorCandidates = new List<HorizontalPlane>();
 
         [SerializeField, Tooltip("Product placed on tap. Its pivot should be at the bottom centre. Can be changed at runtime with SetProductPrefab.")]
         GameObject m_ProductPrefab;
@@ -32,6 +37,7 @@ namespace ARProductViewer.AR
 
         ARRaycastManager m_RaycastManager;
         ARAnchorManager m_AnchorManager;
+        ARPlaneManager m_PlaneManager;
         PlacementGhost m_Ghost;
         InputAction m_PlaceAction;
         ARPlane m_CandidatePlane;
@@ -42,10 +48,14 @@ namespace ARProductViewer.AR
         /// <summary>The prefab currently previewed and placed.</summary>
         public GameObject ProductPrefab => m_ProductPrefab;
 
+        /// <summary>The floor height estimate from the latest frame.</summary>
+        public FloorEstimate Floor { get; private set; }
+
         void Awake()
         {
             m_RaycastManager = GetComponent<ARRaycastManager>();
             m_AnchorManager = GetComponent<ARAnchorManager>();
+            m_PlaneManager = GetComponent<ARPlaneManager>();
             if (m_Camera == null)
                 m_Camera = Camera.main;
 
@@ -100,8 +110,10 @@ namespace ARProductViewer.AR
 
         void Update()
         {
-            var hit = ProbeScreenCentre(out m_CandidatePlane);
-            m_Placement.UpdateHit(hit, m_Camera.transform.position.ToFloat3());
+            Floor = EstimateFloor();
+            ProbeScreenCentre();
+            m_Placement.UpdateHits(m_SurfaceHits, m_Camera.transform.position.ToFloat3(), Floor);
+            m_CandidatePlane = m_Placement.CanPlace ? m_HitPlanes[m_Placement.SelectedHitIndex] : null;
 
             if (m_Ghost != null)
             {
@@ -118,18 +130,43 @@ namespace ARProductViewer.AR
             }
         }
 
-        SurfaceHit ProbeScreenCentre(out ARPlane plane)
+        FloorEstimate EstimateFloor()
         {
-            plane = null;
+            m_FloorCandidates.Clear();
+            foreach (var plane in m_PlaneManager.trackables)
+            {
+                if (plane.subsumedBy != null
+                    || plane.trackingState != TrackingState.Tracking
+                    || plane.alignment != PlaneAlignment.HorizontalUp)
+                    continue;
+
+                var isClassifiedFloor = (plane.classifications & PlaneClassifications.Floor) != 0;
+                m_FloorCandidates.Add(new HorizontalPlane(plane.center.y, isClassifiedFloor));
+            }
+
+            return FloorEstimator.Estimate(m_FloorCandidates);
+        }
+
+        /// <summary>
+        /// Collects every plane hit along the centre ray, closest first, so Core can skip
+        /// elevated surfaces (tables, beds) and pick the floor behind them.
+        /// </summary>
+        void ProbeScreenCentre()
+        {
+            m_SurfaceHits.Clear();
+            m_HitPlanes.Clear();
+
             var screenCentre = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
             if (!m_RaycastManager.Raycast(screenCentre, s_Hits, TrackableType.PlaneWithinPolygon))
-                return SurfaceHit.None;
+                return;
 
-            // Hits are sorted by distance; the closest one is what the user is looking at.
-            var hit = s_Hits[0];
-            plane = hit.trackable as ARPlane;
-            var isHorizontalUp = plane != null && plane.alignment == PlaneAlignment.HorizontalUp;
-            return new SurfaceHit(true, isHorizontalUp, hit.pose.position.ToFloat3());
+            foreach (var hit in s_Hits)
+            {
+                var plane = hit.trackable as ARPlane;
+                var isHorizontalUp = plane != null && plane.alignment == PlaneAlignment.HorizontalUp;
+                m_SurfaceHits.Add(new SurfaceHit(true, isHorizontalUp, hit.pose.position.ToFloat3()));
+                m_HitPlanes.Add(plane);
+            }
         }
 
         void OnPlacePerformed(InputAction.CallbackContext context)

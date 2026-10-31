@@ -25,3 +25,11 @@ MonoBehaviour:
     m_DisplayName: Sofa
     m_Prefab: {fileID: 8871034126071990540, guid: aac4e5bad8a767f43b8b6e21c733fc1a, type: 3}
     m_Thumbnail: {fileID: 21300000, guid: de7635fd57452c04991aaaf15d6382af, type: 3}
+  - m_Id: potted_plant
+    m_DisplayName: Potted Plant
+    m_Prefab: {fileID: 1910898346300295226, guid: 87be69869b82cab46a9e1d32100d452d, type: 3}
+    m_Thumbnail: {fileID: 21300000, guid: 66b2653335cc0c045ae0042b5c3192a3, type: 3}
+  - m_Id: tall_plant
+    m_DisplayName: Tall Plant
+    m_Prefab: {fileID: 702492073147028269, guid: 980f7b6eb8c37324db9ebdec9781827b, type: 3}
+    m_Thumbnail: {fileID: 21300000, guid: 3d97e7f7a8dabe740b459b54b70f4b28, type: 3}

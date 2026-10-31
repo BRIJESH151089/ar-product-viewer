@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ARProductViewer.Core;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ARProductViewer.UI
 {
@@ -15,6 +16,9 @@ namespace ARProductViewer.UI
 
         [SerializeField]
         ProductButton m_ButtonPrefab;
+
+        [SerializeField, Tooltip("Optional. Reset to the start after the buttons are built so the first product is fully visible.")]
+        ScrollRect m_ScrollRect;
 
         readonly List<ProductButton> m_Buttons = new List<ProductButton>();
         ProductSelectionService m_Selection;
@@ -35,6 +39,18 @@ namespace ARProductViewer.UI
 
             m_Selection.SelectionChanged += OnSelectionChanged;
             RefreshSelection();
+            ScrollToStart();
+        }
+
+        void ScrollToStart()
+        {
+            if (m_ScrollRect == null)
+                return;
+
+            // Lay out the new buttons now so the content width is known before snapping to the start.
+            LayoutRebuilder.ForceRebuildLayoutImmediate(m_Content);
+            m_ScrollRect.StopMovement();
+            m_ScrollRect.horizontalNormalizedPosition = 0f;
         }
 
         void OnDestroy() => Unsubscribe();

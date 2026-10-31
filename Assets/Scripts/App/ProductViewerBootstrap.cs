@@ -30,12 +30,19 @@ namespace ARProductViewer.App
         [SerializeField]
         ScanHintView m_ScanHint;
 
+        [SerializeField, Tooltip("Frame rate until the AR session takes over. ARSession's Match Frame Rate then locks it to the AR camera's rate (usually 30).")]
+        int m_FallbackFrameRate = 30;
+
         ProductSelectionService m_Selection;
         PlacedItemSelection m_PlacedSelection;
         readonly ScanHintState m_ScanHintState = new ScanHintState();
 
         void Awake()
         {
+            // -1 means "platform default"; make the target explicit until ARSession matches the camera rate.
+            if (Application.targetFrameRate <= 0)
+                Application.targetFrameRate = m_FallbackFrameRate;
+
             // Shared before any input is processed so taps select into the same state the toolbar shows.
             m_PlacedSelection = new PlacedItemSelection();
             m_Interaction.Initialize(m_PlacedSelection);

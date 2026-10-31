@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ARProductViewer.Core;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
@@ -16,6 +17,7 @@ namespace ARProductViewer.AR
     public sealed class ARTapToPlace : MonoBehaviour
     {
         static readonly List<ARRaycastHit> s_Hits = new List<ARRaycastHit>();
+        static readonly List<RaycastResult> s_UIHits = new List<RaycastResult>();
 
         [SerializeField, Tooltip("Product placed on tap. Its pivot should be at the bottom centre. Can be changed at runtime with SetProductPrefab.")]
         GameObject m_ProductPrefab;
@@ -34,6 +36,8 @@ namespace ARProductViewer.AR
         InputAction m_PlaceAction;
         ARPlane m_CandidatePlane;
         bool m_IsPlacing;
+        bool m_HasPendingTap;
+        Vector2 m_PendingTapPosition;
 
         /// <summary>The prefab currently previewed and placed.</summary>
         public GameObject ProductPrefab => m_ProductPrefab;
@@ -82,6 +86,7 @@ namespace ARProductViewer.AR
         {
             m_PlaceAction.Disable();
             m_PlaceAction.performed -= OnPlacePerformed;
+            m_HasPendingTap = false;
             if (m_Ghost != null)
                 m_Ghost.Hide();
         }
@@ -105,6 +110,12 @@ namespace ARProductViewer.AR
                 else
                     m_Ghost.Hide();
             }
+
+            if (m_HasPendingTap)
+            {
+                m_HasPendingTap = false;
+                TryPlaceFromTap(m_PendingTapPosition);
+            }
         }
 
         SurfaceHit ProbeScreenCentre(out ARPlane plane)
@@ -123,10 +134,35 @@ namespace ARProductViewer.AR
 
         void OnPlacePerformed(InputAction.CallbackContext context)
         {
-            if (m_IsPlacing || m_ProductPrefab == null || !m_Placement.TryConfirm(out var pose))
+            // UI state is only reliable outside input event processing, so handle the tap in Update.
+            var pointer = Pointer.current;
+            if (pointer == null)
                 return;
 
-            PlaceProduct(m_ProductPrefab, pose.ToUnityPose(), m_CandidatePlane);
+            m_PendingTapPosition = pointer.position.ReadValue();
+            m_HasPendingTap = true;
+        }
+
+        void TryPlaceFromTap(Vector2 screenPosition)
+        {
+            if (m_IsPlacing || m_ProductPrefab == null || IsOverUI(screenPosition))
+                return;
+
+            if (m_Placement.TryConfirm(out var pose))
+                PlaceProduct(m_ProductPrefab, pose.ToUnityPose(), m_CandidatePlane);
+        }
+
+        static bool IsOverUI(Vector2 screenPosition)
+        {
+            var eventSystem = EventSystem.current;
+            if (eventSystem == null)
+                return false;
+
+            var pointerData = new PointerEventData(eventSystem) { position = screenPosition };
+            eventSystem.RaycastAll(pointerData, s_UIHits);
+            var isOverUI = s_UIHits.Count > 0;
+            s_UIHits.Clear();
+            return isOverUI;
         }
 
         async void PlaceProduct(GameObject productPrefab, Pose pose, ARPlane plane)

@@ -213,8 +213,9 @@ namespace ARProductViewer.AR
             if (m_IsPlacing || m_ProductPrefab == null || IsOverUI(screenPosition))
                 return;
 
+            // Place at exactly the pose the reticle and ghost were drawn at this frame; no new raycast.
             if (m_Placement.TryConfirm(out var pose))
-                PlaceProduct(m_ProductPrefab, pose.ToUnityPose(), m_CandidatePlane);
+                PlaceProduct(m_ProductPrefab, pose, m_CandidatePlane);
         }
 
         static bool IsOverUI(Vector2 screenPosition)
@@ -230,16 +231,23 @@ namespace ARProductViewer.AR
             return isOverUI;
         }
 
-        async void PlaceProduct(GameObject productPrefab, Pose pose, ARPlane plane)
+        async void PlaceProduct(GameObject productPrefab, PlacementPose intendedPose, ARPlane plane)
         {
             m_IsPlacing = true;
             try
             {
-                var anchor = await CreateAnchorAsync(pose, plane);
+                // Spawn at the intended floor pose immediately. The product is not parented to the anchor:
+                // AnchoredProduct only follows the anchor once it is tracking at this pose.
+                var pose = intendedPose.ToUnityPose();
                 var product = Instantiate(productPrefab, pose.position, pose.rotation);
-                if (anchor != null)
-                    product.transform.SetParent(anchor.transform, true);
-                else
+                var anchored = product.AddComponent<AnchoredProduct>();
+
+                var anchor = await CreateAnchorAsync(pose, plane);
+                if (product == null)
+                    return;
+
+                anchored.Initialize(intendedPose, anchor, m_AnchorManager);
+                if (anchor == null)
                     Debug.LogWarning($"{nameof(ARTapToPlace)}: could not create an anchor; product placed without one.", product);
             }
             finally

@@ -17,7 +17,7 @@ namespace ARProductViewer.AR
     {
         static readonly List<ARRaycastHit> s_Hits = new List<ARRaycastHit>();
 
-        [SerializeField, Tooltip("Product placed on tap. Its pivot should be at the bottom centre.")]
+        [SerializeField, Tooltip("Product placed on tap. Its pivot should be at the bottom centre. Can be changed at runtime with SetProductPrefab.")]
         GameObject m_ProductPrefab;
 
         [SerializeField, Tooltip("Material applied to every renderer of the placement preview.")]
@@ -35,6 +35,9 @@ namespace ARProductViewer.AR
         ARPlane m_CandidatePlane;
         bool m_IsPlacing;
 
+        /// <summary>The prefab currently previewed and placed.</summary>
+        public GameObject ProductPrefab => m_ProductPrefab;
+
         void Awake()
         {
             m_RaycastManager = GetComponent<ARRaycastManager>();
@@ -42,11 +45,31 @@ namespace ARProductViewer.AR
             if (m_Camera == null)
                 m_Camera = Camera.main;
 
-            m_Ghost = PlacementGhost.Create(m_ProductPrefab, m_GhostMaterial);
+            RebuildGhost();
 
             m_PlaceAction = new InputAction("Place", InputActionType.Button);
             m_PlaceAction.AddBinding("<Touchscreen>/primaryTouch/tap");
             m_PlaceAction.AddBinding("<Mouse>/leftButton");
+        }
+
+        /// <summary>
+        /// Switches the product that is previewed and placed. Already placed products are unaffected.
+        /// </summary>
+        public void SetProductPrefab(GameObject productPrefab)
+        {
+            if (productPrefab == m_ProductPrefab)
+                return;
+
+            m_ProductPrefab = productPrefab;
+            RebuildGhost();
+        }
+
+        void RebuildGhost()
+        {
+            if (m_Ghost != null)
+                Destroy(m_Ghost.gameObject);
+
+            m_Ghost = m_ProductPrefab != null ? PlacementGhost.Create(m_ProductPrefab, m_GhostMaterial) : null;
         }
 
         void OnEnable()
@@ -59,7 +82,8 @@ namespace ARProductViewer.AR
         {
             m_PlaceAction.Disable();
             m_PlaceAction.performed -= OnPlacePerformed;
-            m_Ghost.Hide();
+            if (m_Ghost != null)
+                m_Ghost.Hide();
         }
 
         void OnDestroy()
@@ -74,10 +98,13 @@ namespace ARProductViewer.AR
             var hit = ProbeScreenCentre(out m_CandidatePlane);
             m_Placement.UpdateHit(hit, m_Camera.transform.position.ToFloat3());
 
-            if (m_Placement.CanPlace)
-                m_Ghost.Show(m_Placement.CurrentPose.ToUnityPose());
-            else
-                m_Ghost.Hide();
+            if (m_Ghost != null)
+            {
+                if (m_Placement.CanPlace)
+                    m_Ghost.Show(m_Placement.CurrentPose.ToUnityPose());
+                else
+                    m_Ghost.Hide();
+            }
         }
 
         SurfaceHit ProbeScreenCentre(out ARPlane plane)
@@ -96,19 +123,19 @@ namespace ARProductViewer.AR
 
         void OnPlacePerformed(InputAction.CallbackContext context)
         {
-            if (m_IsPlacing || !m_Placement.TryConfirm(out var pose))
+            if (m_IsPlacing || m_ProductPrefab == null || !m_Placement.TryConfirm(out var pose))
                 return;
 
-            PlaceProduct(pose.ToUnityPose(), m_CandidatePlane);
+            PlaceProduct(m_ProductPrefab, pose.ToUnityPose(), m_CandidatePlane);
         }
 
-        async void PlaceProduct(Pose pose, ARPlane plane)
+        async void PlaceProduct(GameObject productPrefab, Pose pose, ARPlane plane)
         {
             m_IsPlacing = true;
             try
             {
                 var anchor = await CreateAnchorAsync(pose, plane);
-                var product = Instantiate(m_ProductPrefab, pose.position, pose.rotation);
+                var product = Instantiate(productPrefab, pose.position, pose.rotation);
                 if (anchor != null)
                     product.transform.SetParent(anchor.transform, true);
                 else

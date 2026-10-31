@@ -327,8 +327,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4966719baa26e4b0e8231a24d9bd491a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.XR.ARFoundation::UnityEngine.XR.ARFoundation.ARCameraManager
-  m_FocusMode: 1
-  m_LightEstimationMode: 0
+  m_FocusMode: -1
+  m_LightEstimationMode: -1
   m_AutoFocus: 1
   m_ImageStabilization: 0
   m_LightEstimation: 0
@@ -594,6 +594,8 @@ GameObject:
   - component: {fileID: 1816157780}
   - component: {fileID: 1816157779}
   - component: {fileID: 1816157778}
+  - component: {fileID: 1816157783}
+  - component: {fileID: 1816157782}
   m_Layer: 0
   m_Name: XR Origin (AR)
   m_TagString: Untagged
@@ -667,6 +669,37 @@ Transform:
   - {fileID: 1454053294}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1816157782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1816157777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c56377fd6ccc69242868408cf43f102a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ARProductViewer.AR::ARProductViewer.AR.ARTapToPlace
+  m_ProductPrefab: {fileID: 6148821469454875788, guid: 225bdde72c486ed4881258f20084200a, type: 3}
+  m_GhostMaterial: {fileID: 2100000, guid: 63ae3d17c2e83434a8feafe13e61f4ee, type: 2}
+  m_Camera: {fileID: 406011167}
+--- !u!114 &1816157783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1816157777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 728ad7fae8e460a4ba41265c7308d757, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.XR.ARFoundation::UnityEngine.XR.ARFoundation.ARAnchorManager
+  <trackablesChanged>k__BackingField:
+    m_PersistentCalls:
+      m_Calls: []
+  m_AnchorPrefab: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

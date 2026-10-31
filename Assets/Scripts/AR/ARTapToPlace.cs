@@ -215,7 +215,22 @@ namespace ARProductViewer.AR
 
             // Place at exactly the pose the reticle and ghost were drawn at this frame; no new raycast.
             if (m_Placement.TryConfirm(out var pose))
+            {
+                LogTapDebug(pose);
                 PlaceProduct(m_ProductPrefab, pose, m_CandidatePlane);
+            }
+        }
+
+        void LogTapDebug(PlacementPose pose)
+        {
+            var intended = pose.Position.ToVector3();
+            var reticle = m_Reticle != null ? m_Reticle.transform.position : intended;
+            var ghost = m_Ghost != null ? m_Ghost.transform.position : intended;
+            PlacementDebug.Log(
+                $"tap intended={PlacementDebug.Format(intended)} yaw={pose.YawDegrees:F1} floorY={Floor.Height:F3} " +
+                $"reticle={PlacementDebug.Format(reticle)} (lifted {reticle.y - intended.y:F3}) |dXZ reticle|={new Vector2(reticle.x - intended.x, reticle.z - intended.z).magnitude:F4} " +
+                $"ghost={PlacementDebug.Format(ghost)} |d ghost|={(ghost - intended).magnitude:F4} " +
+                $"camera={PlacementDebug.Format(m_Camera.transform.position)} plane={(m_CandidatePlane != null ? m_CandidatePlane.trackableId.ToString() : "none")}");
         }
 
         static bool IsOverUI(Vector2 screenPosition)
@@ -247,6 +262,13 @@ namespace ARProductViewer.AR
                     return;
 
                 anchored.Initialize(intendedPose, anchor, m_AnchorManager);
+                if (anchor != null)
+                {
+                    var anchorPosition = anchor.transform.position;
+                    PlacementDebug.Log(
+                        $"anchor created pose={PlacementDebug.Format(anchorPosition)} tracking={anchor.trackingState} " +
+                        $"|anchor - intended|={(anchorPosition - pose.position).magnitude:F3} product={PlacementDebug.Format(product.transform.position)}");
+                }
                 if (anchor == null)
                     Debug.LogWarning($"{nameof(ARTapToPlace)}: could not create an anchor; product placed without one.", product);
             }

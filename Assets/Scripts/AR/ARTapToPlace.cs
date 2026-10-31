@@ -55,6 +55,9 @@ namespace ARProductViewer.AR
         /// <summary>True while the reticle is over the floor and a product prefab is set.</summary>
         public bool CanPlace => m_Placement.CanPlace && m_ProductPrefab != null;
 
+        /// <summary>True while the screen centre is over a floor-level plane (the reticle is shown), whatever the product.</summary>
+        public bool HasPlacementPose => m_Placement.CanPlace;
+
         /// <summary>Hides the ghost and reticle, e.g. while the user manipulates a placed product.</summary>
         public bool SuppressPreview { get; set; }
 

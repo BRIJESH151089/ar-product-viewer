@@ -1,16 +1,15 @@
 using System.Collections.Generic;
 using ARProductViewer.Core;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
 namespace ARProductViewer.AR
 {
     /// <summary>
-    /// Raycasts from the screen centre onto detected planes, previews the product there with a ghost,
-    /// and places an anchored product on tap. Only floor-level planes are accepted. Placement and floor
+    /// Raycasts from the screen centre onto detected planes, previews the product there with a ghost and
+    /// reticle, and places an anchored product when asked via <see cref="PlaceAtReticle"/> (taps are handled
+    /// by <see cref="FurnitureInteraction"/>). Only floor-level planes are accepted. Placement and floor
     /// decisions are made by <see cref="PlacementService"/> and <see cref="FloorEstimator"/>;
     /// this component only converts AR data to Core data and back.
     /// </summary>
@@ -18,7 +17,6 @@ namespace ARProductViewer.AR
     public sealed class ARTapToPlace : MonoBehaviour
     {
         static readonly List<ARRaycastHit> s_Hits = new List<ARRaycastHit>();
-        static readonly List<RaycastResult> s_UIHits = new List<RaycastResult>();
 
         readonly List<SurfaceHit> m_SurfaceHits = new List<SurfaceHit>();
         readonly List<ARPlane> m_HitPlanes = new List<ARPlane>();
@@ -43,10 +41,7 @@ namespace ARProductViewer.AR
         ARPlaneManager m_PlaneManager;
         PlacementGhost m_Ghost;
         PlacementReticle m_Reticle;
-        InputAction m_PlaceAction;
         ARPlane m_CandidatePlane;
-        bool m_HasPendingTap;
-        Vector2 m_PendingTapPosition;
 
         /// <summary>The prefab currently previewed and placed.</summary>
         public GameObject ProductPrefab => m_ProductPrefab;
@@ -87,10 +82,6 @@ namespace ARProductViewer.AR
             }
 
             RebuildGhost();
-
-            m_PlaceAction = new InputAction("Place", InputActionType.Button);
-            m_PlaceAction.AddBinding("<Touchscreen>/primaryTouch/tap");
-            m_PlaceAction.AddBinding("<Mouse>/leftButton");
         }
 
         /// <summary>
@@ -113,17 +104,8 @@ namespace ARProductViewer.AR
             m_Ghost = m_ProductPrefab != null ? PlacementGhost.Create(m_ProductPrefab, m_GhostMaterial) : null;
         }
 
-        void OnEnable()
-        {
-            m_PlaceAction.performed += OnPlacePerformed;
-            m_PlaceAction.Enable();
-        }
-
         void OnDisable()
         {
-            m_PlaceAction.Disable();
-            m_PlaceAction.performed -= OnPlacePerformed;
-            m_HasPendingTap = false;
             if (m_Ghost != null)
                 m_Ghost.Hide();
             if (m_Reticle != null)
@@ -132,7 +114,6 @@ namespace ARProductViewer.AR
 
         void OnDestroy()
         {
-            m_PlaceAction.Dispose();
             if (m_Ghost != null)
                 Destroy(m_Ghost.gameObject);
             if (m_Reticle != null)
@@ -147,12 +128,6 @@ namespace ARProductViewer.AR
             m_CandidatePlane = m_Placement.CanPlace ? m_HitPlanes[m_Placement.SelectedHitIndex] : null;
 
             UpdatePreview();
-
-            if (m_HasPendingTap)
-            {
-                m_HasPendingTap = false;
-                TryPlaceFromTap(m_PendingTapPosition);
-            }
         }
 
         /// <summary>Shows the ghost and reticle at the placement pose while over the floor; hides both otherwise.</summary>
@@ -212,40 +187,6 @@ namespace ARProductViewer.AR
                 m_SurfaceHits.Add(new SurfaceHit(true, isHorizontalUp, hit.pose.position.ToFloat3()));
                 m_HitPlanes.Add(plane);
             }
-        }
-
-        void OnPlacePerformed(InputAction.CallbackContext context)
-        {
-            // UI state is only reliable outside input event processing, so handle the tap in Update.
-            var pointer = Pointer.current;
-            if (pointer == null)
-                return;
-
-            m_PendingTapPosition = pointer.position.ReadValue();
-            m_HasPendingTap = true;
-        }
-
-        void TryPlaceFromTap(Vector2 screenPosition)
-        {
-            if (m_ProductPrefab == null || IsOverUI(screenPosition))
-                return;
-
-            // Place at exactly the pose the reticle and ghost were drawn at this frame; no new raycast.
-            if (m_Placement.TryConfirm(out var pose))
-                PlaceProduct(m_ProductPrefab, pose, m_CandidatePlane);
-        }
-
-        static bool IsOverUI(Vector2 screenPosition)
-        {
-            var eventSystem = EventSystem.current;
-            if (eventSystem == null)
-                return false;
-
-            var pointerData = new PointerEventData(eventSystem) { position = screenPosition };
-            eventSystem.RaycastAll(pointerData, s_UIHits);
-            var isOverUI = s_UIHits.Count > 0;
-            s_UIHits.Clear();
-            return isOverUI;
         }
 
         AnchoredProduct PlaceProduct(GameObject productPrefab, PlacementPose intendedPose, ARPlane plane)

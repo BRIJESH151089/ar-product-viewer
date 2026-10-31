@@ -1,0 +1,18 @@
+{
+    "name": "ARProductViewer.App",
+    "rootNamespace": "ARProductViewer.App",
+    "references": [
+        "ARProductViewer.Core",
+        "ARProductViewer.AR",
+        "ARProductViewer.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

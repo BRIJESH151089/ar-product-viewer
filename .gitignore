@@ -92,3 +92,14 @@ CLAUDE.local.md
 # AR Foundation XR Simulation per-user settings
 /[Aa]ssets/XR/UserSimulationSettings/
 /[Aa]ssets/XR/UserSimulationSettings.meta
+
+# Android / Gradle / CMake build intermediates
+/.utmp/
+.gradle/
+.cxx/
+.externalNativeBuild/
+local.properties
+
+# XR Simulation settings temporarily moved aside during Player builds
+/[Aa]ssets/XR/[Tt]emp/
+/[Aa]ssets/XR/[Tt]emp.meta

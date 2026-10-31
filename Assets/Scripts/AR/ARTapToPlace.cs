@@ -45,7 +45,6 @@ namespace ARProductViewer.AR
         PlacementReticle m_Reticle;
         InputAction m_PlaceAction;
         ARPlane m_CandidatePlane;
-        bool m_IsPlacing;
         bool m_HasPendingTap;
         Vector2 m_PendingTapPosition;
 
@@ -210,7 +209,7 @@ namespace ARProductViewer.AR
 
         void TryPlaceFromTap(Vector2 screenPosition)
         {
-            if (m_IsPlacing || m_ProductPrefab == null || IsOverUI(screenPosition))
+            if (m_ProductPrefab == null || IsOverUI(screenPosition))
                 return;
 
             // Place at exactly the pose the reticle and ghost were drawn at this frame; no new raycast.
@@ -231,43 +230,15 @@ namespace ARProductViewer.AR
             return isOverUI;
         }
 
-        async void PlaceProduct(GameObject productPrefab, PlacementPose intendedPose, ARPlane plane)
+        AnchoredProduct PlaceProduct(GameObject productPrefab, PlacementPose intendedPose, ARPlane plane)
         {
-            m_IsPlacing = true;
-            try
-            {
-                // Spawn at the intended floor pose immediately. The product is not parented to the anchor:
-                // AnchoredProduct only follows the anchor once it is tracking at this pose.
-                var pose = intendedPose.ToUnityPose();
-                var product = Instantiate(productPrefab, pose.position, pose.rotation);
-                var anchored = product.AddComponent<AnchoredProduct>();
-
-                var anchor = await CreateAnchorAsync(pose, plane);
-                if (product == null)
-                    return;
-
-                anchored.Initialize(intendedPose, anchor, m_AnchorManager);
-                if (anchor == null)
-                    Debug.LogWarning($"{nameof(ARTapToPlace)}: could not create an anchor; product placed without one.", product);
-            }
-            finally
-            {
-                m_IsPlacing = false;
-            }
-        }
-
-        async Awaitable<ARAnchor> CreateAnchorAsync(Pose pose, ARPlane plane)
-        {
-            // Prefer attaching to the plane so the anchor follows plane refinements.
-            if (plane != null)
-            {
-                var attached = m_AnchorManager.AttachAnchor(plane, pose);
-                if (attached != null)
-                    return attached;
-            }
-
-            var result = await m_AnchorManager.TryAddAnchorAsync(pose);
-            return result.status.IsSuccess() ? result.value : null;
+            // Spawn at the intended floor pose immediately. The product is not parented to its anchor:
+            // AnchoredProduct only follows the anchor once it is tracking at this pose.
+            var pose = intendedPose.ToUnityPose();
+            var product = Instantiate(productPrefab, pose.position, pose.rotation);
+            var anchored = product.AddComponent<AnchoredProduct>();
+            anchored.Place(intendedPose, plane, m_AnchorManager);
+            return anchored;
         }
     }
 }

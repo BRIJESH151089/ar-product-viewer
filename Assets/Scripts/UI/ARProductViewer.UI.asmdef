@@ -4,6 +4,7 @@
     "references": [
         "ARProductViewer.Core",
         "UnityEngine.UI",
+        "Unity.TextMeshPro",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],

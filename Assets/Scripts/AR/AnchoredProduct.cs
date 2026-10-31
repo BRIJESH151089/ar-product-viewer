@@ -149,7 +149,9 @@ namespace ARProductViewer.AR
             m_Anchor = null;
         }
 
-        bool CanUseAnchorManager() => m_AnchorManager != null && m_AnchorManager.enabled;
+        // AttachAnchor / TryAddAnchorAsync dereference the subsystem without checking, so it must exist
+        // (it does not before ARCore is running, nor in the Editor without an AR provider).
+        bool CanUseAnchorManager() => m_AnchorManager != null && m_AnchorManager.enabled && m_AnchorManager.subsystem != null;
 
         void Apply(PlacementPose pose)
         {

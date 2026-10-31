@@ -88,3 +88,7 @@ CLAUDE.local.md
 *.key
 .env
 .env.*
+
+# AR Foundation XR Simulation per-user settings
+/[Aa]ssets/XR/UserSimulationSettings/
+/[Aa]ssets/XR/UserSimulationSettings.meta

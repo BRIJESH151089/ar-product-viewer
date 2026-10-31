@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edc32f5d6b1dbdc4d885884955ce29db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ARProductViewer.AR::ARProductViewer.AR.BlobShadow
-  m_Padding: 1.3
+  m_Padding: 1.5
   m_SurfaceOffset: 0.002
 --- !u!1 &4782897284026523370
 GameObject:

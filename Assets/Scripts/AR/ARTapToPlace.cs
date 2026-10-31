@@ -30,6 +30,9 @@ namespace ARProductViewer.AR
         [SerializeField, Tooltip("Material applied to every renderer of the placement preview.")]
         Material m_GhostMaterial;
 
+        [SerializeField, Tooltip("Marker shown on the floor at the exact placement point. Optional.")]
+        PlacementReticle m_ReticlePrefab;
+
         [SerializeField, Tooltip("AR camera. Defaults to Camera.main.")]
         Camera m_Camera;
 
@@ -39,6 +42,7 @@ namespace ARProductViewer.AR
         ARAnchorManager m_AnchorManager;
         ARPlaneManager m_PlaneManager;
         PlacementGhost m_Ghost;
+        PlacementReticle m_Reticle;
         InputAction m_PlaceAction;
         ARPlane m_CandidatePlane;
         bool m_IsPlacing;
@@ -58,6 +62,12 @@ namespace ARProductViewer.AR
             m_PlaneManager = GetComponent<ARPlaneManager>();
             if (m_Camera == null)
                 m_Camera = Camera.main;
+
+            if (m_ReticlePrefab != null)
+            {
+                m_Reticle = Instantiate(m_ReticlePrefab);
+                m_Reticle.Hide();
+            }
 
             RebuildGhost();
 
@@ -99,6 +109,8 @@ namespace ARProductViewer.AR
             m_HasPendingTap = false;
             if (m_Ghost != null)
                 m_Ghost.Hide();
+            if (m_Reticle != null)
+                m_Reticle.Hide();
         }
 
         void OnDestroy()
@@ -106,6 +118,8 @@ namespace ARProductViewer.AR
             m_PlaceAction.Dispose();
             if (m_Ghost != null)
                 Destroy(m_Ghost.gameObject);
+            if (m_Reticle != null)
+                Destroy(m_Reticle.gameObject);
         }
 
         void Update()
@@ -115,18 +129,32 @@ namespace ARProductViewer.AR
             m_Placement.UpdateHits(m_SurfaceHits, m_Camera.transform.position.ToFloat3(), Floor);
             m_CandidatePlane = m_Placement.CanPlace ? m_HitPlanes[m_Placement.SelectedHitIndex] : null;
 
-            if (m_Ghost != null)
-            {
-                if (m_Placement.CanPlace)
-                    m_Ghost.Show(m_Placement.CurrentPose.ToUnityPose());
-                else
-                    m_Ghost.Hide();
-            }
+            UpdatePreview();
 
             if (m_HasPendingTap)
             {
                 m_HasPendingTap = false;
                 TryPlaceFromTap(m_PendingTapPosition);
+            }
+        }
+
+        /// <summary>Shows the ghost and reticle at the placement pose while over the floor; hides both otherwise.</summary>
+        void UpdatePreview()
+        {
+            if (m_Placement.CanPlace)
+            {
+                var pose = m_Placement.CurrentPose.ToUnityPose();
+                if (m_Ghost != null)
+                    m_Ghost.Show(pose);
+                if (m_Reticle != null)
+                    m_Reticle.Show(pose);
+            }
+            else
+            {
+                if (m_Ghost != null)
+                    m_Ghost.Hide();
+                if (m_Reticle != null)
+                    m_Reticle.Hide();
             }
         }
 

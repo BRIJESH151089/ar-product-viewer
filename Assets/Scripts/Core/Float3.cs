@@ -22,6 +22,14 @@ namespace ARProductViewer.Core
 
         public static Float3 operator -(Float3 a, Float3 b) => new Float3(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 
+        public static Float3 operator +(Float3 a, Float3 b) => new Float3(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+
+        public static float Distance(Float3 a, Float3 b)
+        {
+            var d = a - b;
+            return (float)Math.Sqrt(d.X * d.X + d.Y * d.Y + d.Z * d.Z);
+        }
+
         public bool Equals(Float3 other) => X == other.X && Y == other.Y && Z == other.Z;
 
         public override bool Equals(object obj) => obj is Float3 other && Equals(other);

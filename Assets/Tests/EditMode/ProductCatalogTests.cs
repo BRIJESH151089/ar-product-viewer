@@ -46,6 +46,43 @@ namespace ARProductViewer.Tests
             Assert.IsFalse(catalog.Contains(id));
         }
 
+        static ProductCatalog CreateFiveProductCatalog() => new ProductCatalog(new[]
+        {
+            new ProductInfo("chair", "Chair"),
+            new ProductInfo("table", "Table"),
+            new ProductInfo("sofa", "Sofa"),
+            new ProductInfo("potted_plant", "Potted Plant"),
+            new ProductInfo("tall_plant", "Tall Plant"),
+        });
+
+        [Test]
+        public void FiveProducts_KeepOrderAndFindPlants()
+        {
+            var catalog = CreateFiveProductCatalog();
+
+            Assert.AreEqual(5, catalog.Count);
+            Assert.AreEqual("tall_plant", catalog.Products[4].Id);
+            Assert.IsTrue(catalog.TryGet("potted_plant", out var potted));
+            Assert.AreEqual("Potted Plant", potted.DisplayName);
+            Assert.IsTrue(catalog.Contains("tall_plant"));
+        }
+
+        [Test]
+        public void FiveProducts_SelectionCanReachEveryProduct()
+        {
+            var catalog = CreateFiveProductCatalog();
+            var selection = new ProductSelectionService(catalog);
+
+            foreach (var product in catalog.Products)
+            {
+                Assert.IsTrue(selection.Select(product.Id));
+                Assert.AreEqual(product.Id, selection.Selected.Id);
+            }
+
+            Assert.IsTrue(selection.Select("chair"));
+            Assert.AreEqual("chair", selection.Selected.Id);
+        }
+
         [Test]
         public void Constructor_DuplicateId_Throws()
         {

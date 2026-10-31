@@ -54,6 +54,24 @@ namespace ARProductViewer.AR
         /// <summary>The floor height estimate from the latest frame.</summary>
         public FloorEstimate Floor { get; private set; }
 
+        /// <summary>True while the reticle is over the floor and a product prefab is set.</summary>
+        public bool CanPlace => m_Placement.CanPlace && m_ProductPrefab != null;
+
+        /// <summary>Hides the ghost and reticle, e.g. while the user manipulates a placed product.</summary>
+        public bool SuppressPreview { get; set; }
+
+        /// <summary>
+        /// Places the current product exactly at the pose the reticle and ghost show this frame.
+        /// Returns null when <see cref="CanPlace"/> is false.
+        /// </summary>
+        public AnchoredProduct PlaceAtReticle()
+        {
+            if (m_ProductPrefab == null || !m_Placement.TryConfirm(out var pose))
+                return null;
+
+            return PlaceProduct(m_ProductPrefab, pose, m_CandidatePlane);
+        }
+
         void Awake()
         {
             m_RaycastManager = GetComponent<ARRaycastManager>();
@@ -140,7 +158,7 @@ namespace ARProductViewer.AR
         /// <summary>Shows the ghost and reticle at the placement pose while over the floor; hides both otherwise.</summary>
         void UpdatePreview()
         {
-            if (m_Placement.CanPlace)
+            if (m_Placement.CanPlace && !SuppressPreview)
             {
                 var pose = m_Placement.CurrentPose.ToUnityPose();
                 if (m_Ghost != null)

@@ -134,6 +134,25 @@ namespace ARProductViewer.Tests
         }
 
         [Test]
+        public void TryConfirm_ReturnsExactlyThePreviewPose()
+        {
+            // The reticle and ghost are drawn at CurrentPose; tapping must place at that same pose,
+            // not at the closer elevated hit on the same ray.
+            var hits = new[]
+            {
+                FloorHit(0.2f, 1.1f, k_FloorY + 0.75f),
+                FloorHit(0.4f, 3.2f, k_FloorY + 0.02f),
+            };
+            m_Service.UpdateHits(hits, k_Camera, k_Floor);
+            var previewPose = m_Service.CurrentPose;
+
+            Assert.IsTrue(m_Service.TryConfirm(out var placedPose));
+            Assert.AreEqual(previewPose.Position, placedPose.Position);
+            Assert.AreEqual(previewPose.YawDegrees, placedPose.YawDegrees);
+            Assert.AreEqual(hits[1].Position, placedPose.Position);
+        }
+
+        [Test]
         public void UpdateHits_SeveralFloorHits_PicksClosest()
         {
             var hits = new[] { FloorHit(0f, 1.5f), FloorHit(0f, 3f) };

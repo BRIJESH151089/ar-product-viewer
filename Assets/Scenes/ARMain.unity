@@ -624,6 +624,7 @@ GameObject:
   - component: {fileID: 458491445}
   - component: {fileID: 458491444}
   - component: {fileID: 458491446}
+  - component: {fileID: 458491447}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -740,6 +741,21 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!114 &458491447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 458491443}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48c7bc2024d361a4ba1254f2d05cc041, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ARProductViewer.AR::ARProductViewer.AR.ARLightEstimator
+  m_CameraManager: {fileID: 406011165}
+  m_RequestedEstimation: 28
+  m_SmoothingHalfLife: 0.25
 --- !u!1 &584236574
 GameObject:
   m_ObjectHideFlags: 0

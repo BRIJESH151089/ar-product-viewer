@@ -3,6 +3,7 @@
     "rootNamespace": "ARProductViewer.Tests",
     "references": [
         "ARProductViewer.Core",
+        "ARProductViewer.App",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

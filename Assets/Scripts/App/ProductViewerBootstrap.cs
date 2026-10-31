@@ -21,7 +21,23 @@ namespace ARProductViewer.App
         [SerializeField]
         ProductPickerView m_Picker;
 
+        [SerializeField]
+        FurnitureInteraction m_Interaction;
+
+        [SerializeField]
+        SelectionToolbarView m_SelectionToolbar;
+
         ProductSelectionService m_Selection;
+        PlacedItemSelection m_PlacedSelection;
+
+        void Awake()
+        {
+            // Shared before any input is processed so taps select into the same state the toolbar shows.
+            m_PlacedSelection = new PlacedItemSelection();
+            m_Interaction.Initialize(m_PlacedSelection);
+            m_SelectionToolbar.Initialize(m_PlacedSelection);
+            m_SelectionToolbar.DeleteClicked += m_Interaction.DeleteSelected;
+        }
 
         void Start()
         {
@@ -44,6 +60,8 @@ namespace ARProductViewer.App
         {
             if (m_Selection != null)
                 m_Selection.SelectionChanged -= ApplySelection;
+            if (m_SelectionToolbar != null && m_Interaction != null)
+                m_SelectionToolbar.DeleteClicked -= m_Interaction.DeleteSelected;
         }
 
         void ApplySelection(ProductInfo product)

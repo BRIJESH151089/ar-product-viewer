@@ -1750,6 +1750,7 @@ MonoBehaviour:
   m_ProductPrefab: {fileID: 0}
   m_GhostMaterial: {fileID: 2100000, guid: 63ae3d17c2e83434a8feafe13e61f4ee, type: 2}
   m_ReticlePrefab: {fileID: 6458541597544080322, guid: e27efad1c920b3d40aa17df14cb2a992, type: 3}
+  m_ShadowPrefab: {fileID: 6219612314831261327, guid: c00ba1006d317e443aff8f4478bd54a7, type: 3}
   m_Camera: {fileID: 406011167}
 --- !u!114 &1816157783
 MonoBehaviour:

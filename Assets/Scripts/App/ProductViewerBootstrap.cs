@@ -27,8 +27,12 @@ namespace ARProductViewer.App
         [SerializeField]
         SelectionToolbarView m_SelectionToolbar;
 
+        [SerializeField]
+        ScanHintView m_ScanHint;
+
         ProductSelectionService m_Selection;
         PlacedItemSelection m_PlacedSelection;
+        readonly ScanHintState m_ScanHintState = new ScanHintState();
 
         void Awake()
         {
@@ -37,6 +41,14 @@ namespace ARProductViewer.App
             m_Interaction.Initialize(m_PlacedSelection);
             m_SelectionToolbar.Initialize(m_PlacedSelection);
             m_SelectionToolbar.DeleteClicked += m_Interaction.DeleteSelected;
+
+            if (m_ScanHint != null)
+                m_ScanHint.Initialize(m_ScanHintState);
+        }
+
+        void Update()
+        {
+            m_ScanHintState.Update(m_TapToPlace.Floor.HasFloor, m_TapToPlace.HasPlacementPose);
         }
 
         void Start()

@@ -31,6 +31,9 @@ namespace ARProductViewer.AR
         [SerializeField, Tooltip("Marker shown on the floor at the exact placement point. Optional.")]
         PlacementReticle m_ReticlePrefab;
 
+        [SerializeField, Tooltip("Soft contact shadow added under every placed product. Optional.")]
+        BlobShadow m_ShadowPrefab;
+
         [SerializeField, Tooltip("AR camera. Defaults to Camera.main.")]
         Camera m_Camera;
 
@@ -195,6 +198,8 @@ namespace ARProductViewer.AR
             // AnchoredProduct only follows the anchor once it is tracking at this pose.
             var pose = intendedPose.ToUnityPose();
             var product = Instantiate(productPrefab, pose.position, pose.rotation);
+            if (m_ShadowPrefab != null)
+                BlobShadow.Attach(m_ShadowPrefab, product);
             var anchored = product.AddComponent<AnchoredProduct>();
             anchored.Place(intendedPose, plane, m_AnchorManager);
             return anchored;

@@ -40,27 +40,7 @@ namespace ARProductViewer.AR
 
             var anchorTransform = m_Anchor.transform;
             var anchorPose = new PlacementPose(anchorTransform.position.ToFloat3(), anchorTransform.eulerAngles.y);
-            var wasLocked = m_Follower.IsLocked;
             Apply(m_Follower.Update(m_Anchor.trackingState == TrackingState.Tracking, anchorPose));
-            LogDebug(wasLocked, anchorTransform.position);
-        }
-
-        int m_DebugFrames;
-
-        void LogDebug(bool wasLocked, Vector3 anchorPosition)
-        {
-            const int k_MaxDebugFrames = 600;
-            if (m_DebugFrames++ > k_MaxDebugFrames)
-                return;
-
-            var intended = m_Follower.IntendedPose.Position.ToVector3();
-            if (!wasLocked && m_Follower.IsLocked)
-                PlacementDebug.Log($"{name} locked to anchor at {PlacementDebug.Format(anchorPosition)} (|anchor - intended|={(anchorPosition - intended).magnitude:F3}) after {m_DebugFrames} frames");
-
-            if (m_DebugFrames % 120 == 0)
-                PlacementDebug.Log(
-                    $"{name} frame {m_DebugFrames}: product={PlacementDebug.Format(transform.position)} |product - intended|={(transform.position - intended).magnitude:F3} " +
-                    $"anchor={PlacementDebug.Format(anchorPosition)} tracking={m_Anchor.trackingState} locked={m_Follower.IsLocked}");
         }
 
         void OnDestroy()

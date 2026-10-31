@@ -1342,8 +1342,8 @@ MonoBehaviour:
   m_Catalog: {fileID: 11400000, guid: 6961f8aed02cfb142a56ea4e567ed898, type: 2}
   m_TapToPlace: {fileID: 1816157782}
   m_Picker: {fileID: 1221080078}
-  m_Interaction: {fileID: 0}
-  m_SelectionToolbar: {fileID: 0}
+  m_Interaction: {fileID: 1816157784}
+  m_SelectionToolbar: {fileID: 590239036}
 --- !u!4 &1353784985
 Transform:
   m_ObjectHideFlags: 0
@@ -1547,6 +1547,7 @@ GameObject:
   - component: {fileID: 1816157778}
   - component: {fileID: 1816157783}
   - component: {fileID: 1816157782}
+  - component: {fileID: 1816157784}
   m_Layer: 0
   m_Name: XR Origin (AR)
   m_TagString: Untagged
@@ -1652,6 +1653,24 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_AnchorPrefab: {fileID: 0}
+--- !u!114 &1816157784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1816157777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98cb636d43d392f45ad974cef67ec4ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ARProductViewer.AR::ARProductViewer.AR.FurnitureInteraction
+  m_Placer: {fileID: 1816157782}
+  m_Camera: {fileID: 406011167}
+  m_IndicatorPrefab: {fileID: 4524361809826090063, guid: 16650448a551f8a4083f97c23e6bd0c3, type: 3}
+  m_FurnitureLayer: PlacedFurniture
+  m_DragThresholdDp: 10
+  m_MaxTapDistance: 20
 --- !u!1 &2094076441
 GameObject:
   m_ObjectHideFlags: 0

@@ -58,6 +58,7 @@ namespace ARProductViewer.AR
         GestureState m_State;
         Float2 m_PressStart;
         AnchoredProduct m_PressedItem;
+        float m_GrabHeight;
         AnchoredProduct m_ManipulatedItem;
         Float2 m_PreviousA;
         Float2 m_PreviousB;
@@ -209,7 +210,7 @@ namespace ARProductViewer.AR
                 return;
             }
 
-            m_PressedItem = RaycastFurniture(position);
+            m_PressedItem = RaycastFurniture(position, out m_GrabHeight);
             m_State = GestureState.Pressing;
         }
 
@@ -218,9 +219,12 @@ namespace ARProductViewer.AR
             if (m_State == GestureState.Pressing && ManipulationMath.ExceedsDragThreshold(m_PressStart, position, DragThresholdPixels()))
             {
                 var selected = SelectedItem();
-                if (selected != null && m_PressedItem == selected && TryFingerFloorPoint(position, selected.CurrentPose.Position.Y, out var floorPoint))
+                // Drag on a horizontal plane at the height the finger touched the piece, starting from where
+                // the finger first went down: the touched spot stays under the finger 1:1, while FloorDrag
+                // keeps the piece itself on the floor.
+                if (selected != null && m_PressedItem == selected && TryFingerPointAtHeight(m_PressStart, m_GrabHeight, out var grabPoint))
                 {
-                    m_Drag.Begin(selected.CurrentPose.Position, floorPoint);
+                    m_Drag.Begin(selected.CurrentPose.Position, grabPoint);
                     BeginManipulation(selected);
                     m_State = GestureState.Dragging;
                 }
@@ -232,7 +236,7 @@ namespace ARProductViewer.AR
             }
 
             if (m_State == GestureState.Dragging && m_ManipulatedItem != null
-                && TryFingerFloorPoint(position, m_Drag.FloorHeight, out var point))
+                && TryFingerPointAtHeight(position, m_GrabHeight, out var point))
             {
                 var pose = m_ManipulatedItem.CurrentPose;
                 m_ManipulatedItem.SetPose(new PlacementPose(m_Drag.Update(point), pose.YawDegrees));
@@ -366,20 +370,26 @@ namespace ARProductViewer.AR
             return null;
         }
 
-        AnchoredProduct RaycastFurniture(Float2 screenPosition)
+        AnchoredProduct RaycastFurniture(Float2 screenPosition, out float hitHeight)
         {
+            hitHeight = 0f;
             var ray = m_Camera.ScreenPointToRay(new Vector3(screenPosition.X, screenPosition.Y, 0f));
             if (!Physics.Raycast(ray, out var hit, m_MaxTapDistance, m_LayerMask, QueryTriggerInteraction.Ignore))
                 return null;
 
             var item = hit.collider.GetComponentInParent<AnchoredProduct>();
-            return item != null && m_Items.ContainsKey(item.Id) ? item : null;
+            if (item == null || !m_Items.ContainsKey(item.Id))
+                return null;
+
+            hitHeight = hit.point.y;
+            return item;
         }
 
-        bool TryFingerFloorPoint(Float2 screenPosition, float floorHeight, out Float3 point)
+        /// <summary>Where the finger's ray meets the horizontal plane at <paramref name="height"/>.</summary>
+        bool TryFingerPointAtHeight(Float2 screenPosition, float height, out Float3 point)
         {
             var ray = m_Camera.ScreenPointToRay(new Vector3(screenPosition.X, screenPosition.Y, 0f));
-            return ManipulationMath.TryIntersectFloor(ray.origin.ToFloat3(), ray.direction.ToFloat3(), floorHeight, out point);
+            return ManipulationMath.TryIntersectFloor(ray.origin.ToFloat3(), ray.direction.ToFloat3(), height, out point);
         }
 
         float DragThresholdPixels()

@@ -5,7 +5,9 @@ namespace ARProductViewer.Core
 {
     /// <summary>
     /// Tracks the current placement candidate and decides whether a product can be placed.
-    /// Only surfaces at floor height are accepted, so products never end up on beds or table tops.
+    /// Only surfaces at floor height are accepted, so products never end up on beds or table tops,
+    /// and the resulting pose is snapped onto the floor reference height so the preview and the
+    /// placed product share one exact height.
     /// Feed it the surface hits along the aiming ray every frame; confirm with <see cref="TryConfirm"/>.
     /// </summary>
     public sealed class PlacementService
@@ -14,6 +16,7 @@ namespace ARProductViewer.Core
         public const float DefaultFloorTolerance = 0.15f;
 
         const float k_MinFacingDistance = 0.001f;
+        const float k_MinRayDrop = 0.001f;
 
         /// <summary>Maximum height difference, in metres, between a hit and the floor for it to count as floor.</summary>
         public float FloorTolerance { get; }
@@ -37,8 +40,9 @@ namespace ARProductViewer.Core
 
         /// <summary>
         /// Picks the first hit (hits are expected closest first) that lies on a horizontal surface at floor
-        /// height, skipping higher surfaces such as table tops. The resulting pose is upright and turned to
-        /// face <paramref name="viewerPosition"/> (usually the camera).
+        /// height, skipping higher surfaces such as table tops. The resulting pose sits exactly at the floor
+        /// height on the aiming ray from <paramref name="viewerPosition"/> (the camera) through the hit, and is
+        /// upright and turned to face the viewer.
         /// </summary>
         public void UpdateHits(IReadOnlyList<SurfaceHit> hits, Float3 viewerPosition, FloorEstimate floor)
         {
@@ -49,7 +53,7 @@ namespace ARProductViewer.Core
             {
                 if (IsAtFloorLevel(hits[i], floor))
                 {
-                    Accept(i, hits[i], viewerPosition);
+                    Accept(i, hits[i], viewerPosition, floor);
                     return;
                 }
             }
@@ -61,9 +65,27 @@ namespace ARProductViewer.Core
         public void UpdateHit(SurfaceHit hit, Float3 viewerPosition, FloorEstimate floor)
         {
             if (IsAtFloorLevel(hit, floor))
-                Accept(0, hit, viewerPosition);
+                Accept(0, hit, viewerPosition, floor);
             else
                 Reject();
+        }
+
+        /// <summary>
+        /// Moves <paramref name="hit"/> along the ray from <paramref name="viewer"/> through it until it reaches
+        /// <paramref name="floorHeight"/>, so the point stays under the same screen position but lies exactly
+        /// on the floor. If the ray does not point downwards, only the height is replaced.
+        /// </summary>
+        public static Float3 SnapToFloor(Float3 hit, Float3 viewer, float floorHeight)
+        {
+            var drop = hit.Y - viewer.Y;
+            if (drop > -k_MinRayDrop)
+                return new Float3(hit.X, floorHeight, hit.Z);
+
+            var t = (floorHeight - viewer.Y) / drop;
+            return new Float3(
+                viewer.X + (hit.X - viewer.X) * t,
+                floorHeight,
+                viewer.Z + (hit.Z - viewer.Z) * t);
         }
 
         /// <summary>
@@ -101,10 +123,11 @@ namespace ARProductViewer.Core
             return yaw < 0f ? yaw + 360f : yaw;
         }
 
-        void Accept(int index, SurfaceHit hit, Float3 viewerPosition)
+        void Accept(int index, SurfaceHit hit, Float3 viewerPosition, FloorEstimate floor)
         {
-            var yaw = ComputeYawTowards(hit.Position, viewerPosition, CurrentPose.YawDegrees);
-            CurrentPose = new PlacementPose(hit.Position, yaw);
+            var position = SnapToFloor(hit.Position, viewerPosition, floor.Height);
+            var yaw = ComputeYawTowards(position, viewerPosition, CurrentPose.YawDegrees);
+            CurrentPose = new PlacementPose(position, yaw);
             SelectedHitIndex = index;
             CanPlace = true;
         }

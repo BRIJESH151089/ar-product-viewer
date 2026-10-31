@@ -149,7 +149,60 @@ namespace ARProductViewer.Tests
             Assert.IsTrue(m_Service.TryConfirm(out var placedPose));
             Assert.AreEqual(previewPose.Position, placedPose.Position);
             Assert.AreEqual(previewPose.YawDegrees, placedPose.YawDegrees);
-            Assert.AreEqual(hits[1].Position, placedPose.Position);
+            Assert.AreEqual(k_FloorY, placedPose.Position.Y, "placed pose must sit exactly on the floor");
+            Assert.Greater(placedPose.Position.Z, 3f, "placed pose must be on the far floor hit, not the table");
+        }
+
+        [TestCase(0.08f)]
+        [TestCase(-0.06f)]
+        [TestCase(0f)]
+        public void UpdateHit_FloorLevelHitSlightlyOffFloor_PoseSnapsExactlyToFloorHeight(float hitOffset)
+        {
+            // Overlapping floor fragments can sit a few cm apart; the preview and placed product
+            // must all use the one floor reference height.
+            var floor = FloorEstimate.At(-1.4f);
+
+            m_Service.UpdateHit(FloorHit(0.4f, 3.2f, -1.4f + hitOffset), k_Camera, floor);
+
+            Assert.IsTrue(m_Service.CanPlace);
+            Assert.AreEqual(-1.4f, m_Service.CurrentPose.Position.Y, k_Tolerance);
+        }
+
+        [Test]
+        public void SnapToFloor_HitAboveFloor_SlidesAlongAimRayToFloorHeight()
+        {
+            var camera = new Float3(0f, 1.5f, 0f);
+            var hit = new Float3(0.4f, 0.02f, 3.2f);
+
+            var snapped = PlacementService.SnapToFloor(hit, camera, 0f);
+
+            // t = (0 - 1.5) / (0.02 - 1.5) => point continues slightly further along the ray.
+            var t = 1.5f / 1.48f;
+            Assert.AreEqual(0f, snapped.Y, k_Tolerance);
+            Assert.AreEqual(0.4f * t, snapped.X, k_Tolerance);
+            Assert.AreEqual(3.2f * t, snapped.Z, k_Tolerance);
+        }
+
+        [Test]
+        public void SnapToFloor_HitAlreadyOnFloor_IsUnchanged()
+        {
+            var hit = new Float3(0.3f, 0f, 2f);
+
+            var snapped = PlacementService.SnapToFloor(hit, k_Camera, 0f);
+
+            Assert.AreEqual(hit.X, snapped.X, k_Tolerance);
+            Assert.AreEqual(hit.Y, snapped.Y, k_Tolerance);
+            Assert.AreEqual(hit.Z, snapped.Z, k_Tolerance);
+        }
+
+        [Test]
+        public void SnapToFloor_RayNotPointingDown_OnlyReplacesHeight()
+        {
+            var snapped = PlacementService.SnapToFloor(new Float3(1f, 1.5f, 2f), k_Camera, 0f);
+
+            Assert.AreEqual(1f, snapped.X, k_Tolerance);
+            Assert.AreEqual(0f, snapped.Y, k_Tolerance);
+            Assert.AreEqual(2f, snapped.Z, k_Tolerance);
         }
 
         [Test]

@@ -103,3 +103,6 @@ local.properties
 # XR Simulation settings temporarily moved aside during Player builds
 /[Aa]ssets/XR/[Tt]emp/
 /[Aa]ssets/XR/[Tt]emp.meta
+
+# Unity Pipeline (MCP bridge) local editor configuration
+/ProjectSettings/Packages/com.unity.pipeline/

@@ -122,6 +122,26 @@ namespace ARProductViewer.Tests
             Assert.IsFalse(settings.HasDirection);
         }
 
+        // ---- Fallback --------------------------------------------------------------------------
+
+        [Test]
+        public void Fallback_IsNeutralIntensityWarmWhiteWithAmbient()
+        {
+            var fallback = LightEstimationMapper.Fallback;
+
+            Assert.AreEqual(1f, fallback.Intensity, k_Tolerance);
+            Assert.AreEqual(1f, fallback.Color.X, k_Tolerance, "red is the brightest channel of warm light");
+            Assert.Greater(fallback.Color.Z, 0.75f, "warm-neutral, not orange");
+            Assert.Less(fallback.Color.Z, fallback.Color.X);
+            Assert.AreEqual(fallback.Color.Y * LightEstimationMapper.AmbientShare, fallback.AmbientColor.Y, k_Tolerance);
+        }
+
+        [Test]
+        public void Fallback_KeepsAuthoredLightDirection()
+        {
+            Assert.IsFalse(LightEstimationMapper.Fallback.HasDirection);
+        }
+
         // ---- Kelvin ----------------------------------------------------------------------------
 
         [Test]

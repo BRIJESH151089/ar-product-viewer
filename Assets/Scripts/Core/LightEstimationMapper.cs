@@ -26,6 +26,15 @@ namespace ARProductViewer.Core
 
         const float k_MinDirectionLength = 0.0001f;
 
+        /// <summary>Colour temperature of the fallback light: a warm-neutral indoor white.</summary>
+        public const float FallbackColorTemperatureKelvin = 5000f;
+
+        /// <summary>
+        /// Lighting to use while the device provides no estimate: a warm-neutral 5000K white at intensity 1 with
+        /// matching flat ambient, so products look naturally lit indoors. Keeps the light's authored direction.
+        /// </summary>
+        public static LightSettings Fallback => Map(new LightEstimateInput { ColorTemperatureKelvin = FallbackColorTemperatureKelvin });
+
         public static LightSettings Map(LightEstimateInput input)
         {
             var intensity = Clamp(EstimateIntensity(input), MinIntensity, MaxIntensity);

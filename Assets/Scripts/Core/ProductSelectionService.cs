@@ -3,16 +3,20 @@ using System;
 namespace ARProductViewer.Core
 {
     /// <summary>
-    /// Tracks which catalog product is currently selected for placement.
+    /// Tracks which catalog product is currently selected for placement. Deselecting leaves placement mode
+    /// ("view mode"): nothing is previewed or placed until a product is selected again.
     /// </summary>
     public sealed class ProductSelectionService
     {
         readonly ProductCatalog m_Catalog;
 
-        /// <summary>The selected product, or null when the catalog is empty.</summary>
+        /// <summary>The selected product, or null in view mode (or when the catalog is empty).</summary>
         public ProductInfo Selected { get; private set; }
 
-        /// <summary>Raised with the newly selected product whenever the selection changes.</summary>
+        /// <summary>True while a product is selected for placement.</summary>
+        public bool IsPlacementActive => Selected != null;
+
+        /// <summary>Raised with the newly selected product (null when deselected) whenever the selection changes.</summary>
         public event Action<ProductInfo> SelectionChanged;
 
         /// <summary>
@@ -39,6 +43,34 @@ namespace ARProductViewer.Core
             Selected = product;
             SelectionChanged?.Invoke(product);
             return true;
+        }
+
+        /// <summary>Leaves placement mode. No-op when nothing is selected.</summary>
+        public void Deselect()
+        {
+            if (Selected == null)
+                return;
+
+            Selected = null;
+            SelectionChanged?.Invoke(null);
+        }
+
+        /// <summary>
+        /// Picker tap: selects <paramref name="id"/>, or deselects it if it is already selected.
+        /// Returns false for ids not in the catalog.
+        /// </summary>
+        public bool ToggleSelect(string id)
+        {
+            if (!m_Catalog.Contains(id))
+                return false;
+
+            if (IsSelected(id))
+            {
+                Deselect();
+                return true;
+            }
+
+            return Select(id);
         }
 
         public bool IsSelected(string id) => Selected != null && Selected.Id == id;

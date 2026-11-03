@@ -67,6 +67,64 @@ namespace ARProductViewer.Tests
         }
 
         [Test]
+        public void NewService_StartsInPlacementMode()
+        {
+            Assert.IsTrue(m_Selection.IsPlacementActive);
+        }
+
+        [Test]
+        public void ToggleSelect_SelectedProduct_EntersViewMode()
+        {
+            Assert.IsTrue(m_Selection.ToggleSelect("chair"));
+
+            Assert.IsNull(m_Selection.Selected);
+            Assert.IsFalse(m_Selection.IsPlacementActive);
+            Assert.IsFalse(m_Selection.IsSelected("chair"));
+            Assert.AreEqual(1, m_Changes.Count);
+            Assert.IsNull(m_Changes[0]);
+        }
+
+        [Test]
+        public void ToggleSelect_InViewMode_ReentersPlacementWithThatProduct()
+        {
+            m_Selection.ToggleSelect("chair");
+
+            Assert.IsTrue(m_Selection.ToggleSelect("table"));
+
+            Assert.IsTrue(m_Selection.IsPlacementActive);
+            Assert.AreEqual("table", m_Selection.Selected.Id);
+        }
+
+        [Test]
+        public void ToggleSelect_OtherProduct_SwitchesWithoutLeavingPlacement()
+        {
+            m_Selection.ToggleSelect("table");
+
+            Assert.IsTrue(m_Selection.IsPlacementActive);
+            Assert.AreEqual("table", m_Selection.Selected.Id);
+            Assert.AreEqual(1, m_Changes.Count);
+        }
+
+        [Test]
+        public void ToggleSelect_UnknownProduct_ChangesNothing()
+        {
+            Assert.IsFalse(m_Selection.ToggleSelect("lamp"));
+
+            Assert.AreEqual("chair", m_Selection.Selected.Id);
+            Assert.IsEmpty(m_Changes);
+        }
+
+        [Test]
+        public void Deselect_TwiceInViewMode_NotifiesOnce()
+        {
+            m_Selection.Deselect();
+            m_Selection.Deselect();
+
+            Assert.IsFalse(m_Selection.IsPlacementActive);
+            Assert.AreEqual(1, m_Changes.Count);
+        }
+
+        [Test]
         public void Select_BackAndForth_NotifiesEachChange()
         {
             m_Selection.Select("table");

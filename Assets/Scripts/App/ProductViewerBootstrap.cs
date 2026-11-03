@@ -33,6 +33,15 @@ namespace ARProductViewer.App
         [SerializeField, Tooltip("Frame rate until the AR session takes over. ARSession's Match Frame Rate then locks it to the AR camera's rate (usually 30).")]
         int m_FallbackFrameRate = 30;
 
+        [SerializeField, Tooltip("Optional. Source for the light estimation debug readout.")]
+        ARLightEstimator m_LightEstimator;
+
+        [SerializeField, Tooltip("Optional. Toggleable on-screen light estimation readout.")]
+        DebugReadoutView m_LightReadout;
+
+        const float k_ReadoutInterval = 0.25f;
+        float m_NextReadoutTime;
+
         ProductSelectionService m_Selection;
         PlacedItemSelection m_PlacedSelection;
         readonly ScanHintState m_ScanHintState = new ScanHintState();
@@ -56,6 +65,17 @@ namespace ARProductViewer.App
         void Update()
         {
             m_ScanHintState.Update(m_TapToPlace.Floor.HasFloor, m_TapToPlace.HasPlacementPose);
+            UpdateLightReadout();
+        }
+
+        void UpdateLightReadout()
+        {
+            if (m_LightReadout == null || m_LightEstimator == null || !m_LightReadout.IsVisible || Time.unscaledTime < m_NextReadoutTime)
+                return;
+
+            m_NextReadoutTime = Time.unscaledTime + k_ReadoutInterval;
+            m_LightReadout.SetText(LightEstimateReadout.Format(
+                m_LightEstimator.ActiveMode, m_LightEstimator.LatestInput, m_LightEstimator.CurrentSettings, m_LightEstimator.IsUsingFallback));
         }
 
         void Start()

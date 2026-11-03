@@ -2,6 +2,8 @@
 
 Place and arrange 3D products in your real space using mobile AR.
 
+Solo portfolio project. Design, integration and testing by me; built with [Claude Code](https://claude.com/claude-code) assistance.
+
 [![YouTube - Watch the demo](https://img.shields.io/badge/YouTube-Watch%20the%20demo-red?logo=youtube&logoColor=white)](https://youtu.be/8dCTaCd1Hc4)
 
 [![AR Product Viewer demo](https://img.youtube.com/vi/8dCTaCd1Hc4/hqdefault.jpg)](https://youtu.be/8dCTaCd1Hc4)
@@ -65,3 +67,7 @@ To run the tests: **Window > General > Test Runner**, open the **EditMode** tab 
 ## Credits
 
 3D models: [Kenney](https://kenney.nl) (CC0)
+
+## AI-use note
+
+This project is built with [Claude Code](https://claude.com/claude-code) as a coding assistant: writing C# against my specs, wiring up Unity Editor/AR Foundation settings, and running tests. I design the architecture, review and integrate every change, and do all testing (Editor and on an Android phone). Nothing here ships without me having read and understood it.

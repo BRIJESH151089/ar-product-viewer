@@ -139,8 +139,12 @@ namespace ARProductViewer.AR
                 HandleMouse();
 
             if (m_Placer != null)
-                m_Placer.SuppressPreview = m_State == GestureState.Dragging || m_State == GestureState.TwoFinger;
+                m_Placer.SuppressPreview = IsEditingPlacedItem;
         }
+
+        /// <summary>A placed piece is selected or being manipulated: the placement preview stays hidden.</summary>
+        bool IsEditingPlacedItem =>
+            Selection.HasSelection || m_State == GestureState.Dragging || m_State == GestureState.TwoFinger;
 
         // ---- Input routing ------------------------------------------------------------------------
 
@@ -268,7 +272,9 @@ namespace ARProductViewer.AR
                 return;
             }
 
-            if (m_Placer != null && m_Placer.CanPlace)
+            // Only place where the user can see the ghost: not in view mode and not while editing a placed piece
+            // (then a floor tap just deselects, which brings the preview back).
+            if (m_Placer != null && PlacementPreviewRules.ShouldPlaceOnFloorTap(m_Placer.IsPlacementActive, m_Placer.HasPlacementPose, Selection.HasSelection))
             {
                 var placed = m_Placer.PlaceAtReticle();
                 if (placed != null)
@@ -348,7 +354,7 @@ namespace ARProductViewer.AR
             m_State = GestureState.Idle;
             m_PressedItem = null;
             if (m_Placer != null)
-                m_Placer.SuppressPreview = false;
+                m_Placer.SuppressPreview = IsEditingPlacedItem;
         }
 
         void Register(AnchoredProduct item)

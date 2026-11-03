@@ -55,11 +55,17 @@ namespace ARProductViewer.AR
         /// <summary>True while the reticle is over the floor and a product prefab is set.</summary>
         public bool CanPlace => m_Placement.CanPlace && m_ProductPrefab != null;
 
-        /// <summary>True while the screen centre is over a floor-level plane (the reticle is shown), whatever the product.</summary>
+        /// <summary>True while the screen centre is over a floor-level plane, whatever the product.</summary>
         public bool HasPlacementPose => m_Placement.CanPlace;
 
-        /// <summary>Hides the ghost and reticle, e.g. while the user manipulates a placed product.</summary>
+        /// <summary>True while a product is set for placement; false in view mode.</summary>
+        public bool IsPlacementActive => m_ProductPrefab != null;
+
+        /// <summary>Hides the ghost and reticle, e.g. while the user selects or manipulates a placed product.</summary>
         public bool SuppressPreview { get; set; }
+
+        /// <summary>True while the ghost and reticle are shown this frame.</summary>
+        public bool IsPreviewVisible => PlacementPreviewRules.ShouldShowPreview(IsPlacementActive, HasPlacementPose, SuppressPreview);
 
         /// <summary>
         /// Places the current product exactly at the pose the reticle and ghost show this frame.
@@ -139,7 +145,7 @@ namespace ARProductViewer.AR
         /// <summary>Shows the ghost and reticle at the placement pose while over the floor; hides both otherwise.</summary>
         void UpdatePreview()
         {
-            if (m_Placement.CanPlace && !SuppressPreview)
+            if (IsPreviewVisible)
             {
                 var pose = m_Placement.CurrentPose.ToUnityPose();
                 if (m_Ghost != null)

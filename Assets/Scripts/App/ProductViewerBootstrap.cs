@@ -85,9 +85,16 @@ namespace ARProductViewer.App
 
         void ApplySelection(ProductInfo product)
         {
-            if (product == null || !m_Catalog.TryGetEntry(product.Id, out var entry) || entry.Prefab == null)
+            // Nothing selected: view mode, so nothing is previewed or placed.
+            if (product == null)
             {
-                Debug.LogWarning($"{nameof(ProductViewerBootstrap)}: no prefab for product '{product?.Id}'.", this);
+                m_TapToPlace.SetProductPrefab(null);
+                return;
+            }
+
+            if (!m_Catalog.TryGetEntry(product.Id, out var entry) || entry.Prefab == null)
+            {
+                Debug.LogWarning($"{nameof(ProductViewerBootstrap)}: no prefab for product '{product.Id}'.", this);
                 m_TapToPlace.SetProductPrefab(null);
                 return;
             }

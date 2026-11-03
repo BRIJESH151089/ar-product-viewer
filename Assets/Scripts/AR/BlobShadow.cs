@@ -8,11 +8,11 @@ namespace ARProductViewer.AR
     /// </summary>
     public sealed class BlobShadow : MonoBehaviour
     {
-        [SerializeField, Tooltip("Shadow size relative to the product's footprint.")]
-        float m_Padding = 1.3f;
+        [SerializeField, Tooltip("Shadow size relative to the product's footprint. The texture's solid core ends just past the footprint edge.")]
+        float m_Padding = 1.6f;
 
-        [SerializeField, Tooltip("Lift above the floor, in metres, to avoid z-fighting with the plane visualizer.")]
-        float m_SurfaceOffset = 0.002f;
+        [SerializeField, Tooltip("Lift above the floor, in metres, so plane-height jitter never puts the shadow below the detected floor.")]
+        float m_SurfaceOffset = 0.01f;
 
         /// <summary>Creates a shadow under <paramref name="product"/>, sized to its root BoxCollider footprint.</summary>
         public static BlobShadow Attach(BlobShadow prefab, GameObject product)

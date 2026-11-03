@@ -12,14 +12,11 @@ An Android app built with Unity and AR Foundation. Point your phone at the floor
 
 ## Screenshots
 
-<!-- Screenshots go here, e.g.
 <p>
-  <img src="Docs/images/placement.jpg" width="260" alt="Placing a chair">
-  <img src="Docs/images/arranged.jpg" width="260" alt="Arranged room">
+  <img src="Doc/images/screenshot-1.jpg" width="250" alt="Sofa and table placed in the room">
+  <img src="Doc/images/screenshot-2.jpg" width="250" alt="Potted plants arranged on the floor">
+  <img src="Doc/images/screenshot-3.jpg" width="250" alt="Placing and selecting a table">
 </p>
--->
-
-_Coming soon._
 
 ## Features
 

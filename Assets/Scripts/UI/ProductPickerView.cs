@@ -7,7 +7,8 @@ namespace ARProductViewer.UI
 {
     /// <summary>
     /// Row of product buttons. Tapping a button selects that product in the
-    /// <see cref="ProductSelectionService"/>; the highlighted button follows the service's selection.
+    /// <see cref="ProductSelectionService"/>, and tapping the highlighted one again deselects it (view mode);
+    /// the highlighted button follows the service's selection.
     /// </summary>
     public sealed class ProductPickerView : MonoBehaviour
     {
@@ -33,7 +34,7 @@ namespace ARProductViewer.UI
             {
                 var button = Instantiate(m_ButtonPrefab, m_Content);
                 var id = item.Product.Id;
-                button.Bind(item.Product, item.Thumbnail, () => m_Selection.Select(id));
+                button.Bind(item.Product, item.Thumbnail, () => m_Selection.ToggleSelect(id));
                 m_Buttons.Add(button);
             }
 
